@@ -1,0 +1,17 @@
+[project]
+name = "epl-sim"
+version = "0.1.0"
+description = "English Premier League season simulator"
+requires-python = ">=3.11"
+dependencies = [
+    "matplotlib",
+    "pandas",
+    "plotly",
+    "streamlit",
+    "seaborn",
+    "requests",
+    "beautifulsoup4",
+]
+
+[project.scripts]
+epl-sim = "epl_sim.cli:main"

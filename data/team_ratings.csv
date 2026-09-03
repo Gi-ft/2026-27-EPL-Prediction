@@ -1,0 +1,21 @@
+name,attack,defense,home_advantage
+Manchester City,0.261,0.197,0.055
+Arsenal,0.197,0.419,0.046
+Manchester United,0.176,-0.027,0.038
+Liverpool,0.113,-0.057,0.021
+Bournemouth,0.061,-0.016,0.0
+Chelsea,0.061,-0.047,-0.025
+Aston Villa,0.039,-0.016,0.034
+Brentford,0.029,0.044,0.046
+Newcastle United,0.008,0.088,0.08
+Brighton,-0.003,0.019,0.034
+Leeds United,-0.034,-0.083,0.038
+Nottingham Forest,-0.045,-0.037,-0.034
+Tottenham Hotspur,-0.045,-0.091,-0.017
+Everton,-0.055,-0.027,0.021
+Fulham,-0.055,0.031,0.055
+Hull City,-0.304,-0.429,-0.032
+Coventry City,-0.032,-0.167,-0.022
+Sunderland,-0.108,0.121,0.034
+Crystal Palace,-0.118,0.088,-0.013
+Ipswich Town,-0.202,-0.201,-0.018
