@@ -49,7 +49,7 @@ A production-grade sports-analytics platform that executes **10,000 parallel Pre
 
 ```mermaid
 flowchart LR
-    A[Native Stats / CSV Inputs] --> B[Ingestion]
+    A[Native Stats] --> B[Ingestion]
     B --> C[Season Data Sandbox]
     C --> D[Ratings and Priors]
     D --> E[Poisson + Fatigue Simulation]
