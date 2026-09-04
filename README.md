@@ -69,17 +69,32 @@ The model demonstrates an elite tracking profile for title contenders due to our
 ```text
 epl-predictive-analytics/
 ├── .github/workflows/
-│   └── pipeline_sync.yml        # GitHub Actions Cron Job Automation Workflow
+│   └── pipeline_sync.yml              # GitHub Actions Cron Job Automation Workflow
 ├── data/
-│   ├── all_simulated_universes_raw.csv  # 10,000 Run Simulation Log
-│   └── season_summary.json              # Post-Processed Aggregated xPts Data
+│   ├── final_archive_2526/            # Backtesting Data Sandbox
+│   │   ├── epl_2526_fixtures.csv      # Full 25/26 schedule mapping
+│   │   ├── epl_2526_results.csv       # Completed 25/26 historical results
+│   │   ├── epl_fixtures.csv           # Generic engine fixture path
+│   │   ├── epl_results.csv             # Generic engine results path
+│   │   └── pre_season_priors.csv       # Historical seed values
+│   ├── active_season_2627/             # Live Dashboard Production Data
+│   │   ├── epl_2627_fixtures.csv      # Live upcoming schedule matrix
+│   │   ├── epl_2627_results.csv       # Live updating results
+│   │   ├── epl_fixtures.csv           # Generic engine fixture path
+│   │   ├── epl_results.csv             # Generic engine results path
+│   │   └── pre_season_priors.csv       # 25/26 points-based seed values
+│   ├── all_simulated_universes_raw.csv # 10,000-run simulation log
+│   └── season_summary.json              # Post-processed aggregated xPts data
 ├── src/
-│   ├── ingestion.py             # BeautifulSoup Scraper & Promoted Team Deflator
-│   ├── ticker_matrix.py         # Full 38-Gameweek Horizontal FDR HTML Ticker
-│   ├── backtest.py              # RMSE Validation Framework Script
-│   └── app.py                   # Streamlit Frontend Dashboard
-├── requirements.txt             # Project Dependency Manifest
-└── README.md                    # Technical Documentation
+│   ├── epl_sim/                       # Core simulation package
+│   ├── engine.py                      # Season-aware simulation entry point
+│   ├── fdi_engine.py                  # Fixture Difficulty Index calculations
+│   ├── ingestion.py                   # BeautifulSoup data ingestion entry point
+│   ├── ticker_matrix.py               # Full 38-gameweek FDR ticker
+│   └── backtest.py                    # RMSE validation framework
+├── app.py                             # Streamlit frontend dashboard
+├── requirements.txt                   # Project dependency manifest
+└── README.md                          # Technical documentation
 ```
 
 ## ⚙️ Local Deployment & Execution
@@ -99,5 +114,4 @@ epl-predictive-analytics/
    ```bash
    streamlit run src/app.py
    ```
-
 

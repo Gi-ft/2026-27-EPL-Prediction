@@ -1,4 +1,5 @@
 import json
+import sys
 from html import escape
 from pathlib import Path
 
@@ -6,7 +7,16 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
+SRC = Path(__file__).resolve().parent / "src"
+if str(SRC) not in sys.path:
+    sys.path.insert(0, str(SRC))
+
+from epl_sim.models import TeamRating
+from epl_sim.simulator import round_robin_fixtures
+from fdi_engine import calculate_fixture_difficulty
+from pipeline_initializer import initialize_pre_season_standings
 from scripts.generate_visuals import build_heatmap
+from src.ticker_matrix import generate_html_full_38_ticker
 
 # ==========================================
 # 1. PAGE CONFIGURATION & DARK THEME HOOK
@@ -64,69 +74,67 @@ HEATMAP_PATH = ROOT / "output_plots" / "epl_probability_heatmap.png"
 
 
 def render_dashboard_table(df: pd.DataFrame, column_config: dict) -> None:
-    """Render a native table, with an HTML fallback when PyArrow is blocked."""
-    try:
-        st.dataframe(
-            df,
-            column_config=column_config,
-            use_container_width=True,
-            hide_index=True,
-            height=800,
-        )
-    except (ImportError, OSError) as error:
-        error_text = str(error).lower()
-        if "pyarrow" not in error_text and "dll" not in error_text:
-            raise
+    """Render a dashboard table as HTML without loading Streamlit's native table stack."""
+    bar_colors = {
+        "Title_Pct": "#58a6ff",
+        "Relegation_Pct": "#ff7b72",
+        "FDI_Remaining": "#ff7b72",
+        "Risk %": "#ff4d4d",
+    }
+    header_labels = {
+        "Team": "Club Name",
+        "xPts": "xPts",
+        "Title_Pct": "Title Probability",
+        "Relegation_Pct": "Relegation Risk",
+        "FDI_Remaining": "FDI Score",
+        "FDI_Tier": "Schedule Status",
+        "Risk %": "Risk %",
+    }
+    headers = "".join(
+        f"<th>{escape(header_labels.get(column, str(column)))}</th>"
+        for column in df.columns
+    )
+    rows = []
+    for _, row in df.iterrows():
+        cells = []
+        for column, value in row.items():
+            if column == "FDI_Remaining":
+                score = max(1.0, min(5.0, float(value)))
+                percentage = ((score - 1.0) / 4.0) * 100.0
+                cells.append(
+                    "<td><div class='metric-cell'>"
+                    f"<span>{score:.2f}</span>"
+                    f"<span class='metric-bar'><span style='width:{percentage:.1f}%;background:{bar_colors[column]};'></span></span>"
+                    "</div></td>"
+                )
+            elif column in bar_colors:
+                percentage = max(0.0, min(100.0, float(value)))
+                cells.append(
+                    "<td><div class='metric-cell'>"
+                    f"<span>{percentage:.1f}%</span>"
+                    f"<span class='metric-bar'><span style='width:{percentage:.1f}%;background:{bar_colors[column]};'></span></span>"
+                    "</div></td>"
+                )
+            elif column == "xPts":
+                cells.append(f"<td>{float(value):.2f}</td>")
+            else:
+                cells.append(f"<td>{escape(str(value))}</td>")
+        rows.append(f"<tr>{''.join(cells)}</tr>")
 
-        st.caption("Native Streamlit tables are unavailable because Windows blocked PyArrow; showing a compatible table.")
-        bar_colors = {
-            "Title_Pct": "#58a6ff",
-            "Relegation_Pct": "#ff7b72",
-            "Risk %": "#ff4d4d",
-        }
-        header_labels = {
-            "Team": "Club Name",
-            "xPts": "xPts",
-            "Title_Pct": "Title Probability",
-            "Relegation_Pct": "Relegation Risk",
-            "Risk %": "Risk %",
-        }
-        headers = "".join(
-            f"<th>{escape(header_labels.get(column, str(column)))}</th>"
-            for column in df.columns
-        )
-        rows = []
-        for _, row in df.iterrows():
-            cells = []
-            for column, value in row.items():
-                if column in bar_colors:
-                    percentage = max(0.0, min(100.0, float(value)))
-                    cells.append(
-                        "<td><div class='metric-cell'>"
-                        f"<span>{percentage:.1f}%</span>"
-                        f"<span class='metric-bar'><span style='width:{percentage:.1f}%;background:{bar_colors[column]};'></span></span>"
-                        "</div></td>"
-                    )
-                elif column == "xPts":
-                    cells.append(f"<td>{float(value):.2f}</td>")
-                else:
-                    cells.append(f"<td>{escape(str(value))}</td>")
-            rows.append(f"<tr>{''.join(cells)}</tr>")
-
-        table_html = (
-            "<style>"
-            ".dashboard-table-wrap{width:100%;max-width:100%;max-height:800px;overflow:auto;}"
-            ".dashboard-table{width:100%;min-width:560px;border-collapse:collapse;color:#c9d1d9;}"
-            ".dashboard-table th,.dashboard-table td{padding:8px 10px;text-align:left;border-bottom:1px solid #30363d;}"
-            ".dashboard-table th{color:#8b949e;font-weight:600;}"
-            ".metric-cell{display:flex;align-items:center;gap:8px;min-width:110px;}"
-            ".metric-bar{display:inline-block;width:64px;height:6px;background:#30363d;border-radius:4px;overflow:hidden;}"
-            ".metric-bar span{display:block;height:100%;border-radius:4px;}"
-            "</style>"
-            f"<div class='dashboard-table-wrap'><table class='dashboard-table'><thead><tr>{headers}</tr></thead>"
-            f"<tbody>{''.join(rows)}</tbody></table></div>"
-        )
-        st.markdown(table_html, unsafe_allow_html=True)
+    table_html = (
+        "<style>"
+        ".dashboard-table-wrap{width:100%;max-width:100%;max-height:800px;overflow:auto;}"
+        ".dashboard-table{width:100%;min-width:560px;border-collapse:collapse;color:#c9d1d9;}"
+        ".dashboard-table th,.dashboard-table td{padding:8px 10px;text-align:left;border-bottom:1px solid #30363d;}"
+        ".dashboard-table th{color:#8b949e;font-weight:600;}"
+        ".metric-cell{display:flex;align-items:center;gap:8px;min-width:110px;}"
+        ".metric-bar{display:inline-block;width:64px;height:6px;background:#30363d;border-radius:4px;overflow:hidden;}"
+        ".metric-bar span{display:block;height:100%;border-radius:4px;}"
+        "</style>"
+        f"<div class='dashboard-table-wrap'><table class='dashboard-table'><thead><tr>{headers}</tr></thead>"
+        f"<tbody>{''.join(rows)}</tbody></table></div>"
+    )
+    st.markdown(table_html, unsafe_allow_html=True)
 
 
 def load_dashboard_data(path: Path) -> pd.DataFrame:
@@ -196,6 +204,30 @@ if not summary_source.exists():
 
 summary_source_label = summary_source.relative_to(ROOT).as_posix()
 df_summary = load_dashboard_data(summary_source)
+fdi_standings = initialize_pre_season_standings()
+if set(fdi_standings["Team"]) != set(df_summary["Team"]):
+    fdi_standings = df_summary[["Team", "xPts"]].copy()
+fdi_teams = [
+    TeamRating(name=team, attack=0.0, defense=0.0)
+    for team in fdi_standings["Team"]
+]
+fdi_fixtures = round_robin_fixtures(fdi_teams)
+_, df_fdi = calculate_fixture_difficulty(fdi_standings, fdi_fixtures)
+master_fixtures = pd.DataFrame(
+    [
+        {"Gameweek": (index // 10) + 1, "HomeTeam": home, "AwayTeam": away}
+        for index, (home, away) in enumerate(fdi_fixtures)
+    ]
+)
+try:
+    played_results = pd.read_csv(
+        ROOT / "data" / "epl_match_results.csv",
+        usecols=lambda column: column in {"HomeTeam", "AwayTeam"},
+    )
+except pd.errors.EmptyDataError:
+    played_results = pd.DataFrame(columns=["HomeTeam", "AwayTeam"])
+if not {"HomeTeam", "AwayTeam"}.issubset(played_results.columns):
+    played_results = pd.DataFrame(columns=["HomeTeam", "AwayTeam"])
 HEATMAP_PATH.parent.mkdir(parents=True, exist_ok=True)
 heatmap_df = df_summary.copy()
 for column in ["Title_Pct", "Top4_Pct", "Relegation_Pct"]:
@@ -281,11 +313,21 @@ with tab1:
         }
     )
 
+    st.markdown("---")
+    st.markdown(
+        "<h3 style='color:#f0f6fc; margin-bottom:15px;'>EPL Full 38-Gameweek Season Ticker Matrix</h3>",
+        unsafe_allow_html=True,
+    )
+    full_season_ticker_html = generate_html_full_38_ticker(
+        df_summary, master_fixtures, played_results
+    )
+    st.html(full_season_ticker_html)
+
 with tab2:
     st.markdown("<h3 style='color:#f0f6fc; margin-bottom:15px;'>Monte Carlo Heat Map</h3>", unsafe_allow_html=True)
 
     if HEATMAP_PATH.exists():
-        st.image(str(HEATMAP_PATH), use_container_width=True)
+        st.image(str(HEATMAP_PATH), width="stretch")
         st.caption("Probability matrix generated from the Monte Carlo season summary.")
     else:
         st.warning("Heat map image not found in `output_plots/`. Showing an in-app fallback chart instead.")

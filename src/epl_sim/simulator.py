@@ -7,8 +7,12 @@ from dataclasses import dataclass, asdict
 from pathlib import Path
 from typing import Iterable
 
+import pandas as pd
+
 from .models import SeasonResult, TableRow, TeamRating
 from .ratings import load_team_ratings
+from fdi_engine import calculate_fixture_difficulty, fdi_goal_modifier
+from pipeline_initializer import initialize_pre_season_standings
 
 
 @dataclass(frozen=True)
@@ -234,6 +238,29 @@ def simulate_match_with_fatigue(
     return poisson_sample(rng, home_xg), poisson_sample(rng, away_xg)
 
 
+def simulate_match_with_fatigue_and_fdi(
+    rng: random.Random,
+    home: TeamRating,
+    away: TeamRating,
+    home_fatigue_mod: float,
+    away_fatigue_mod: float,
+    team_difficulty: dict[str, float],
+) -> tuple[int, int]:
+    """Apply fatigue and fixture difficulty before sampling match goals."""
+    home_xg, away_xg = fatigue_adjusted_expected_goals(
+        home, away, home_fatigue_mod, away_fatigue_mod
+    )
+
+    # A stronger opponent reduces attacking output; a weaker opponent increases it.
+    home_xg *= fdi_goal_modifier(team_difficulty.get(away.name, 3.0))
+    away_xg *= fdi_goal_modifier(team_difficulty.get(home.name, 3.0))
+
+    return (
+        poisson_sample(rng, max(0.1, home_xg)),
+        poisson_sample(rng, max(0.1, away_xg)),
+    )
+
+
 def empty_table(teams: Iterable[TeamRating]) -> dict[str, TableRow]:
     return {team.name: TableRow(team=team.name) for team in teams}
 
@@ -278,14 +305,36 @@ def simulate_season_with_fatigue(
     fatigue_config = fatigue_config or FatigueConfig()
     energy = {team.name: 100 for team in teams}
 
+    # Calculate the FDI map once before the simulation loop begins.
+    fdi_standings = initialize_pre_season_standings()
+    team_names = set(team_map)
+    if set(fdi_standings["Team"]) != team_names:
+        # Keep tests or custom leagues working when they do not use the EPL teams.
+        fdi_standings = pd.DataFrame(
+            {
+                "Team": [team.name for team in teams],
+                "xPts": [0.0 for _ in teams],
+            }
+        )
+
+    team_difficulty, _ = calculate_fixture_difficulty(
+        fdi_standings,
+        fixtures,
+    )
+
     for home_name, away_name in fixtures:
         home = team_map[home_name]
         away = team_map[away_name]
         home_fatigue_mod, away_fatigue_mod = apply_fatigue(
             rng, energy, home_name, away_name, fatigue_config
         )
-        hg, ag = simulate_match_with_fatigue(
-            rng, home, away, home_fatigue_mod, away_fatigue_mod
+        hg, ag = simulate_match_with_fatigue_and_fdi(
+            rng,
+            home,
+            away,
+            home_fatigue_mod,
+            away_fatigue_mod,
+            team_difficulty,
         )
         record_result(table, home_name, away_name, hg, ag)
         energy[home_name] = min(100, energy[home_name] + fatigue_config.recovery)
