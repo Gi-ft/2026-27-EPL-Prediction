@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import csv
 from pathlib import Path
@@ -47,7 +47,8 @@ def impute_promoted_team_ratings(
         team = promoted_lookup[row["name"]]
         stats = promoted_championship_data[team]
         estimated_pl_gf = stats["gf_pg"] * 0.70
-        estimated_pl_ga = stats["ga_pg"] * 0.15
+        # Promotion adjustment increases expected goals conceded at Premier League level.
+        estimated_pl_ga = stats["ga_pg"] / 0.70
 
         updated_profiles.append(
             {
@@ -118,3 +119,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+

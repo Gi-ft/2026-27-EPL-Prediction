@@ -2,6 +2,19 @@
 
 A production-grade sports-analytics platform that executes **10,000 parallel Premier League season simulations** every single night. The architecture replaces standard static averages with a context-aware **Poisson Goal-Distribution Engine**, dynamic **Stamina Fatigue Arrays**, and a complete **FPL-Style 38-Gameweek Ticker Matrix**.
 
+[![Quality Checks](https://github.com/Gi-ft/2627-EPL-Prediction/actions/workflows/quality_checks.yml/badge.svg)](https://github.com/Gi-ft/2627-EPL-Prediction/actions/workflows/quality_checks.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+> A production-style Premier League forecasting lab combining Poisson scoring, fatigue adjustments, fixture difficulty, and Monte Carlo season simulation.
+
+### Dashboard Preview
+
+![EPL probability heatmap](output_plots/epl_probability_heatmap.png)
+
+**Live demo:** Pending Streamlit Community Cloud deployment.
+
+[Deploy this app on Streamlit](https://share.streamlit.io/).
+
 ## 🚀 Key Engineering Highlights
 
 - **Automated Data Pipeline:** Autonomous web-scraping harvester running on a nightly cron-job via **GitHub Actions**.
@@ -29,6 +42,19 @@ A production-grade sports-analytics platform that executes **10,000 parallel Pre
 ```
 
 ---
+
+## Architecture At A Glance
+
+```mermaid
+flowchart LR
+    A[Native Stats / CSV Inputs] --> B[Ingestion]
+    B --> C[Season Data Sandbox]
+    C --> D[Ratings and Priors]
+    D --> E[Poisson + Fatigue Simulation]
+    E --> F[Monte Carlo Aggregation]
+    F --> G[FDI Ticker and Dashboard]
+    E --> H[Backtest RMSE Report]
+```
 
 ## 🔬 Mathematical Framework
 
@@ -97,12 +123,50 @@ epl-predictive-analytics/
 └── README.md                          # Technical documentation
 ```
 
+## 📈 Sample Results
+
+The checked-in season summary currently produces the following illustrative top-five output:
+
+| Rank | Team | xPts | Title Probability | Top 4 Probability |
+| ---: | --- | ---: | ---: | ---: |
+| 1 | Arsenal | 70.35 | 53.85% | 90.35% |
+| 2 | Manchester City | 65.40 | 24.40% | 74.36% |
+| 3 | Manchester United | 56.67 | 3.93% | 31.76% |
+| 4 | Newcastle United | 55.64 | 2.92% | 26.76% |
+| 5 | Brentford | 54.50 | 2.11% | 21.69% |
+
+Generate the latest summary with:
+
+```bash
+python epl_2526_simulator.py
+```
+
+
+## ⚠️ Limitations
+
+- The Poisson model assumes goal events are conditionally independent and may miss game-state effects.
+- Fatigue is represented by configurable team energy decay rather than player-level availability, minutes, or travel distance.
+- Fixture Difficulty Index is a rank-based proxy; it is not a betting-market probability.
+- Historical and live inputs depend on the availability, schema stability, and terms of the upstream data source.
+- The checked-in priors and sample outputs are demonstration data and should not be treated as betting advice.
+- The Streamlit dashboard currently reads the generated summary artifact; refresh the ingestion and simulation pipeline before interpreting it as live.
+
+## 🔁 Continuous Integration
+
+Every push and pull request to `main` runs:
+
+- Python syntax compilation across application, source, scripts, and tests
+- The repository's `unittest` suite
+- Dependency installation from `requirements.txt`
+
+The workflow is defined in `.github/workflows/quality_checks.yml`.
+
 ## ⚙️ Local Deployment & Execution
 
 1. Clone the repository setup:
    ```bash
-   git clone https://github.com
-   cd YOUR-REPOS-NAME
+   git clone https://github.com/Gi-ft/2627-EPL-Prediction.git
+   cd 2627-EPL-Prediction
    ```
 2. Build your local virtual environment:
    ```bash
@@ -112,6 +176,6 @@ epl-predictive-analytics/
    ```
 3. Boot up your visual interface engine layout:
    ```bash
-   streamlit run src/app.py
+   streamlit run app.py
    ```
 

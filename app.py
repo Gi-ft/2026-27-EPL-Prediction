@@ -1,11 +1,18 @@
-import json
+﻿import json
 from html import escape
+import sys
 from pathlib import Path
 
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
+
+SRC = Path(__file__).resolve().parent / "src"
+if str(SRC) not in sys.path:
+    sys.path.insert(0, str(SRC))
+
+from ticker_matrix import generate_html_full_38_ticker
 from scripts.generate_visuals import build_heatmap
 
 # ==========================================
@@ -69,7 +76,7 @@ def render_dashboard_table(df: pd.DataFrame, column_config: dict) -> None:
         st.dataframe(
             df,
             column_config=column_config,
-            use_container_width=True,
+            width="stretch",
             hide_index=True,
             height=800,
         )
@@ -189,6 +196,18 @@ def load_dashboard_data(path: Path) -> pd.DataFrame:
     return df.sort_values(by="Points", ascending=False).reset_index(drop=True)
 
 
+ACTIVE_SEASON_PATH = ROOT / "data" / "active_season_2627"
+FDI_FIXTURES_PATH = ACTIVE_SEASON_PATH / "epl_fixtures.csv"
+FDI_RESULTS_PATH = ACTIVE_SEASON_PATH / "epl_results.csv"
+
+try:
+    fdi_fixtures = pd.read_csv(FDI_FIXTURES_PATH)
+    fdi_results = pd.read_csv(FDI_RESULTS_PATH)
+except (FileNotFoundError, pd.errors.EmptyDataError, pd.errors.ParserError) as exc:
+    st.warning(f"FDI fixture matrix unavailable: {exc}")
+    fdi_fixtures = pd.DataFrame(columns=["Gameweek", "HomeTeam", "AwayTeam"])
+    fdi_results = pd.DataFrame(columns=["HomeTeam", "AwayTeam"])
+
 summary_source = SUMMARY_PATH
 if not summary_source.exists():
     st.error(f"Monte Carlo summary not found: {SUMMARY_PATH}")
@@ -281,11 +300,25 @@ with tab1:
         }
     )
 
+    st.markdown(
+        "<h3 style='color:#f0f6fc; margin-bottom:15px; margin-top:24px;'>Fixture Difficulty Rating Matrix</h3>",
+        unsafe_allow_html=True,
+    )
+    st.caption(
+        "Upcoming fixtures by gameweek. Colors show opponent difficulty from 1 (easiest) to 5 (hardest)."
+    )
+    fdi_matrix_html = generate_html_full_38_ticker(
+        df_summary,
+        fdi_fixtures,
+        fdi_results,
+    )
+    st.html(fdi_matrix_html)
+
 with tab2:
     st.markdown("<h3 style='color:#f0f6fc; margin-bottom:15px;'>Monte Carlo Heat Map</h3>", unsafe_allow_html=True)
 
     if HEATMAP_PATH.exists():
-        st.image(str(HEATMAP_PATH), use_container_width=True)
+        st.image(str(HEATMAP_PATH), width="stretch")
         st.caption("Probability matrix generated from the Monte Carlo season summary.")
     else:
         st.warning("Heat map image not found in `output_plots/`. Showing an in-app fallback chart instead.")
@@ -310,7 +343,7 @@ with tab2:
             height=700,
             margin=dict(l=150, r=20, t=20, b=20),
         )
-        st.plotly_chart(fig_heat, use_container_width=True)
+        st.plotly_chart(fig_heat, width="stretch")
 
     st.markdown("<h3 style='color:#f0f6fc; margin-bottom:15px; margin-top:22px;'>Analytical Deep-Dives</h3>", unsafe_allow_html=True)
     g1, g2 = st.columns(2)
@@ -325,7 +358,7 @@ with tab2:
             height=380, margin=dict(l=10, r=10, t=10, b=10),
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
         )
-        st.plotly_chart(fig_bar, use_container_width=True)
+        st.plotly_chart(fig_bar, width="stretch")
 
     with g2:
         st.markdown("<h4 style='color:#c9d1d9; text-align:center;'>Points Variance Projection</h4>", unsafe_allow_html=True)
@@ -347,4 +380,5 @@ with tab2:
             template="plotly_dark", paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
             height=380, margin=dict(l=10, r=10, t=10, b=10)
         )
-        st.plotly_chart(fig_box, use_container_width=True)
+        st.plotly_chart(fig_box, width="stretch")
+

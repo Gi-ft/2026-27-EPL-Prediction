@@ -1,4 +1,4 @@
-import os
+﻿import os
 from pathlib import Path
 
 import numpy as np
@@ -17,7 +17,7 @@ def compute_opta_style_metrics(raw_universes_path, output_summary_path):
             f"Missing core raw simulation file: '{raw_universes_path}'. Run simulator first."
         )
 
-    print("⏳ Parsing Monte Carlo simulation logs...")
+    print("[TEST] Parsing Monte Carlo simulation logs...")
     df_raw = pd.read_csv(raw_universes_path)
 
     required_columns = {
@@ -66,7 +66,7 @@ def compute_opta_style_metrics(raw_universes_path, output_summary_path):
     temporary_output_path = output_summary_path.with_suffix(output_summary_path.suffix + ".tmp")
     df_opta.to_json(temporary_output_path, orient="records", indent=4)
     temporary_output_path.replace(output_summary_path)
-    print(f"✅ Success! Opta-aligned summary saved to '{output_summary_path}'")
+    print(f"[OK] Opta-aligned summary saved to '{output_summary_path}'")
 
 
 if __name__ == "__main__":
