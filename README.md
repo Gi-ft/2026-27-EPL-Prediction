@@ -9,7 +9,9 @@ A production-grade sports-analytics platform that executes **10,000 parallel Pre
 
 ### Dashboard Preview
 
-![EPL probability heatmap](output_plots/epl_probability_heatmap.png)
+![EPL Simulation Hub dashboard](output_plots/dashboard_preview.png)
+
+![EPL Simulation Hub dashboard walkthrough](output_plots/dashboard_ticker.gif)
 
 **Live demo:** [Open the EPL Simulation Hub](https://2627-epl-prediction-vazn4gksqgnxatbw9kbz2k.streamlit.app/)
 
