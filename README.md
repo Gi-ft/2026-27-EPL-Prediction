@@ -11,7 +11,7 @@ A production-grade sports-analytics platform that executes **10,000 parallel Pre
 
 ![EPL Simulation Hub dashboard](output_plots/dashboard_preview.png)
 
-![EPL Simulation Hub dashboard walkthrough](output_plots/dashboard_ticker.gif)
+![EPL Simulation Hub fixture difficulty matrix](output_plots/dashboard_ticker.png)
 
 **Live demo:** [Open the EPL Simulation Hub](https://2627-epl-prediction-vazn4gksqgnxatbw9kbz2k.streamlit.app/)
 
