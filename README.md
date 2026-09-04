@@ -11,7 +11,7 @@ A production-grade sports-analytics platform that executes **10,000 parallel Pre
 
 ![EPL probability heatmap](output_plots/epl_probability_heatmap.png)
 
-**Live demo:** Pending Streamlit Community Cloud deployment.
+**Live demo:** [Open the EPL Simulation Hub](https://2627-epl-prediction-vazn4gksqgnxatbw9kbz2k.streamlit.app/)
 
 [Deploy this app on Streamlit](https://share.streamlit.io/).
 
