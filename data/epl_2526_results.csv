@@ -3,6 +3,7 @@ Man City MCI,2,6,6,2
 Arsenal ARS,2,6,4,0
 Hull City HUL,2,6,3,0
 Chelsea CHE,2,6,7,5
+Liverpool LIV,3,5,6,4
 Brentford BRE,2,4,4,1
 Newcastle NEW,2,4,4,2
 Everton EVE,2,4,3,1
@@ -10,10 +11,9 @@ Leeds United LEE,2,4,2,1
 Brighton Hove BHA,2,3,7,4
 Man United MUN,2,3,5,4
 Sunderland SUN,2,3,2,2
-Ipswich Town IPS,2,3,4,6
-Liverpool LIV,2,2,4,4
-Bournemouth BOU,2,1,2,3
+Ipswich Town IPS,3,3,4,8
 Nottingham NOT,2,1,2,3
+Bournemouth BOU,2,1,2,3
 Fulham FUL,2,0,2,4
 Coventry City COV,2,0,0,4
 Crystal Palace CRY,2,0,1,6
