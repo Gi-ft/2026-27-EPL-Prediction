@@ -72,7 +72,7 @@ Scores are derived by passing these expectations into an active random vector: `
 
 ### 2. Model Validation & Performance (Backtesting)
 
-We track model degradation and accuracy continuously using **Root Mean Squared Error (RMSE)**. The validation script compares the simulated Expected Points (xPts) matrix directly against the real-world final standings:
+We track the model degradation and accuracy continuously using **Root Mean Squared Error (RMSE)**. The validation script compares the simulated Expected Points (xPts) matrix directly against the real-world final standings:
 
 [\text{RMSE} = \sqrt{\frac{1}{N}\sum\_{i=1}^{N}(xPts\_{i} - \text{ActualPoints}\_{i})^2}]
 
