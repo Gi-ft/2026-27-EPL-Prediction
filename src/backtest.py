@@ -74,7 +74,10 @@ def execute_pipeline_backtest(
     # Load simulation runs and calculate Expected Points (xPts).
     df_sim = pd.read_csv(raw_universes_path)
     df_xpts = df_sim.groupby("Team")["Points"].mean().reset_index(name="xPts")
-
+     # Safety check: Ensure the scraper actually returned data to prevent a KeyError
+    if df_real.empty or "Team" not in df_real.columns:
+       print("[WARNING] Historical data is empty or missing 'Team' column. Skipping merge to prevent crash.")
+       return
     # Join both data matrices on team name.
     df_merged = pd.merge(df_xpts, df_real, on="Team")
     if df_merged.empty:
